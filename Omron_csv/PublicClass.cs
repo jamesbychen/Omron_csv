@@ -198,6 +198,10 @@ namespace Omron_csv
                         {
                             item.MachineName = param.Attributes.GetNamedItem("value").Value;
                         }
+                        if (param.Attributes.GetNamedItem("name").Value == "inspection_end_time")
+                        {
+                            item.inspection_end_time = param.Attributes.GetNamedItem("value").Value;
+                        }
                     }
                     output.Add(item);
                 }
@@ -220,20 +224,34 @@ namespace Omron_csv
                     foreach (XmlNode param in dataList)//get [param] node
                     {
                         //
-                        if (param.Attributes.GetNamedItem("name").Value == "segment_id")
-                        {
-                            item.SegmentID = param.Attributes.GetNamedItem("value").Value;
-                        }
                         if (param.Attributes.GetNamedItem("name").Value == "segment_no")
                         {
                             item.SegmentNo = param.Attributes.GetNamedItem("value").Value;
+                        }
+                        if (param.Attributes.GetNamedItem("name").Value == "segment_code")
+                        {
+                            item.SegmentCode = param.Attributes.GetNamedItem("value").Value;
+                        }
+                        if (param.Attributes.GetNamedItem("name").Value == "circuit_number")
+                        {
+                            item.CircuitNumber = param.Attributes.GetNamedItem("value").Value;
                         }
                         if (param.Attributes.GetNamedItem("name").Value == "component_id")
                         {
                             item.ComponentID = param.Attributes.GetNamedItem("value").Value;
                         }
+                        //因為傳回的COMPONENT中，是否良品都包含其中，需加入檢查結果來判斷
+                        if (param.Attributes.GetNamedItem("name").Value == "last_result")
+                        {
+                            item.LastResult = param.Attributes.GetNamedItem("value").Value;
+                        }
                     }
-                    output.Add(item);
+                    //不正常檢測:last_result=3
+                    if (!item.LastResult.Equals("3"))
+                    {
+                        output.Add(item);
+                    }
+
                 }
             }
             return output;
@@ -266,7 +284,6 @@ namespace Omron_csv
             return output;
         }
         //
-
         public string CallApi(string API)
         {
             HttpClient hc = new HttpClient();
@@ -292,8 +309,8 @@ namespace Omron_csv
             string xmlStr = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
                            + "<parameterUM>"
                            + "<params>"
-                           + "<param name=\"inspection_end_time_from\" value=\"" + ProcessTime + "\" />"
-                           + "<param name=\"inspection_end_time_to\" value=\"" + ProcessTime + "\" />"
+                           + "<param name=\"inspection_end_time_from\" value=\"\" />"
+                           + "<param name=\"inspection_end_time_to\" value=\"\" />"
                            + "<param name=\"system_machine_name\" value=\"" + MachineName + "\" />"
                            + "<param name=\"board_id\" value=\"" + BoardID + "\" />"
                            + "<param name=\"board_side\" value=\"0\" />"
@@ -721,9 +738,12 @@ class Inspection
 {
     public string MachineName { get; set; }//from CSV file name
     public string InspectionID { get; set; }//get from API 4-1
-    public string SegmentID { get; set; }//get from API 4-3
-    public string SegmentNo { get; set; }//get from API 4-3
+    public string inspection_end_time { get; set; }//get from API 4-1
+    public string SegmentNo { get; set; }//get from API 4-3(ComponentBlockNo)
+    public string SegmentCode { get; set; }//get from API 4-3(block_barcode) 
+    public string CircuitNumber { get; set; }//get from API 4-3(PartsName)
     public string ComponentID { get; set; }//get from API 4-3
+    public string LastResult { get; set; }//get from API 4-3
     public string InspectionImagePath { get; set; }//get from API 4-12
 }
 

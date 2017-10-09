@@ -56,8 +56,9 @@ namespace Omron_csv
                     textBox1.Text += "Record Count: " + ins.Count.ToString() + Environment.NewLine;
                     foreach (Inspection item in ins)
                     {
-                        textBox1.Text += "Machine Name:" + item.MachineName + Environment.NewLine;
-                        textBox1.Text += "Inspection ID" + item.InspectionID + Environment.NewLine;
+                        textBox1.Text += "Machine Name: " + item.MachineName + Environment.NewLine;
+                        textBox1.Text += "Inspection ID: " + item.InspectionID + Environment.NewLine;
+                        textBox1.Text += "inspection_end_time: " + item.inspection_end_time + Environment.NewLine;
                         textBox1.Text += "------------------------" + Environment.NewLine;
                     }
                 }
@@ -86,9 +87,9 @@ namespace Omron_csv
                     {
                         textBox1.Text += "Machine Name: " + item.MachineName + Environment.NewLine;
                         textBox1.Text += "Inspection ID: " + item.InspectionID + Environment.NewLine;
-                        textBox1.Text += "Segment ID: " + item.SegmentID + Environment.NewLine;
+                        textBox1.Text += "SegmentCode: " + item.SegmentCode + Environment.NewLine;
                         textBox1.Text += "Segment NO: " + item.SegmentNo + Environment.NewLine;
-                        textBox1.Text += "Component ID: " + item.ComponentID + Environment.NewLine;
+                        textBox1.Text += "LastResult: " + item.LastResult + Environment.NewLine;
                         textBox1.Text += "------------------------" + Environment.NewLine;
                     }
                 }
@@ -109,7 +110,7 @@ namespace Omron_csv
                     List<Inspection> output = new List<Inspection>();
                     pc.MachineName = cbMachineName.SelectedItem.ToString();
                     pc.InspectionID = txbInspectionID.Text;
-                    output = pc.getComponentID(returnXML);
+                    output = pc.getImagePath(returnXML);
                     textBox1.Text = DateTime.Now.ToString() + Environment.NewLine;
                     textBox1.Text += "Record Count: " + output.Count.ToString() + Environment.NewLine;
                     foreach (Inspection item in output)
