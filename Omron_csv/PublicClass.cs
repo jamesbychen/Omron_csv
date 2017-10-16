@@ -202,6 +202,10 @@ namespace Omron_csv
                         {
                             item.inspection_end_time = param.Attributes.GetNamedItem("value").Value;
                         }
+                        if (param.Attributes.GetNamedItem("name").Value == "confirm_date")
+                        {
+                            item.confrim_date = param.Attributes.GetNamedItem("value").Value;
+                        }
                     }
                     output.Add(item);
                 }
@@ -739,6 +743,7 @@ class Inspection
     public string MachineName { get; set; }//from CSV file name
     public string InspectionID { get; set; }//get from API 4-1
     public string inspection_end_time { get; set; }//get from API 4-1
+    public string confrim_date { get; set; }//get from API 4-1
     public string SegmentNo { get; set; }//get from API 4-3(ComponentBlockNo)
     public string SegmentCode { get; set; }//get from API 4-3(block_barcode) 
     public string CircuitNumber { get; set; }//get from API 4-3(PartsName)

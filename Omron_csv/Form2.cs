@@ -58,6 +58,7 @@ namespace Omron_csv
                     {
                         textBox1.Text += "Machine Name: " + item.MachineName + Environment.NewLine;
                         textBox1.Text += "Inspection ID: " + item.InspectionID + Environment.NewLine;
+                        textBox1.Text += "confirm_date: " + item.confrim_date + Environment.NewLine;
                         textBox1.Text += "inspection_end_time: " + item.inspection_end_time + Environment.NewLine;
                         textBox1.Text += "------------------------" + Environment.NewLine;
                     }
