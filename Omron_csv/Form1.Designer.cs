@@ -35,6 +35,8 @@
             this.txbTrickTimer = new System.Windows.Forms.Button();
             this.lbMsg = new System.Windows.Forms.Label();
             this.txbMsg = new System.Windows.Forms.TextBox();
+            this.button3 = new System.Windows.Forms.Button();
+            this.button4 = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // button1
@@ -96,11 +98,33 @@
             this.txbMsg.TabIndex = 9;
             this.txbMsg.TextChanged += new System.EventHandler(this.txbMsg_TextChanged);
             // 
+            // button3
+            // 
+            this.button3.Location = new System.Drawing.Point(235, 242);
+            this.button3.Name = "button3";
+            this.button3.Size = new System.Drawing.Size(75, 23);
+            this.button3.TabIndex = 10;
+            this.button3.Text = "Test";
+            this.button3.UseVisualStyleBackColor = true;
+            this.button3.Click += new System.EventHandler(this.button3_Click);
+            // 
+            // button4
+            // 
+            this.button4.Location = new System.Drawing.Point(338, 242);
+            this.button4.Name = "button4";
+            this.button4.Size = new System.Drawing.Size(119, 23);
+            this.button4.TabIndex = 11;
+            this.button4.Text = "Test USB Lock";
+            this.button4.UseVisualStyleBackColor = true;
+            this.button4.Click += new System.EventHandler(this.button4_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(489, 273);
+            this.Controls.Add(this.button4);
+            this.Controls.Add(this.button3);
             this.Controls.Add(this.txbMsg);
             this.Controls.Add(this.lbMsg);
             this.Controls.Add(this.txbFolder);
@@ -122,6 +146,8 @@
         private System.Windows.Forms.Button txbTrickTimer;
         private System.Windows.Forms.Label lbMsg;
         private System.Windows.Forms.TextBox txbMsg;
+        private System.Windows.Forms.Button button3;
+        private System.Windows.Forms.Button button4;
     }
 }
 

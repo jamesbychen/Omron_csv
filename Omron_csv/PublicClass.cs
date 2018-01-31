@@ -204,7 +204,7 @@ namespace Omron_csv
                         }
                         if (param.Attributes.GetNamedItem("name").Value == "confirm_date")
                         {
-                            item.confrim_date = param.Attributes.GetNamedItem("value").Value;
+                            //item.confrim_date = param.Attributes.GetNamedItem("value").Value;
                         }
                     }
                     output.Add(item);
@@ -212,51 +212,78 @@ namespace Omron_csv
             }
             return output;
         }
-        //
+        //從輸出的XML中取得Component ID
         public List<Inspection> getComponentID(string XML)
         {
-            XmlNodeList outputList = getOutputXMLNodeList(XML);
-            //doc["resultDataM"]["output"]["data"].ChildNodes.Item(0).Attributes.GetNamedItem("value").Value
             List<Inspection> output = new List<Inspection>();
-            if (outputList != null)
+            if (XML.Length > 0)
             {
-                foreach (XmlNode dataList in outputList)//get [data] node
+                XmlNodeList outputList = getOutputXMLNodeList(XML);
+                //doc["resultDataM"]["output"]["data"].ChildNodes.Item(0).Attributes.GetNamedItem("value").Value
+                if (outputList != null)
                 {
-                    Inspection item = new Inspection();
-                    item.MachineName = MachineName;
-                    item.InspectionID = InspectionID;
-                    foreach (XmlNode param in dataList)//get [param] node
+                    foreach (XmlNode dataList in outputList)//get [data] node
                     {
-                        //
-                        if (param.Attributes.GetNamedItem("name").Value == "segment_no")
+                        Inspection item = new Inspection();
+                        item.MachineName = MachineName;
+                        item.InspectionID = InspectionID;
+                        foreach (XmlNode param in dataList)//get [param] node
                         {
-                            item.SegmentNo = param.Attributes.GetNamedItem("value").Value;
+                            if (param.Attributes.GetNamedItem("name").Value == "segment_no")
+                            {
+                                item.SegmentNo = param.Attributes.GetNamedItem("value").Value;
+                            }
+                            if (param.Attributes.GetNamedItem("name").Value == "segment_code")
+                            {
+                                item.SegmentCode = param.Attributes.GetNamedItem("value").Value;
+                            }
+                            if (param.Attributes.GetNamedItem("name").Value == "circuit_number")
+                            {
+                                item.CircuitNumber = param.Attributes.GetNamedItem("value").Value;
+                            }
+                            if (param.Attributes.GetNamedItem("name").Value == "component_id")
+                            {
+                                item.ComponentID = param.Attributes.GetNamedItem("value").Value;
+                            }
+                            //因為傳回的COMPONENT中，是否良品都包含其中，需加入檢查結果來判斷
+                            if (param.Attributes.GetNamedItem("name").Value == "last_result")
+                            {
+                                item.LastResult = param.Attributes.GetNamedItem("value").Value;
+                            }
                         }
-                        if (param.Attributes.GetNamedItem("name").Value == "segment_code")
+                        //不正常資料(last_result=3)
+                        //20171105  暫時不篩選
+                        if (!item.LastResult.Equals("3") || true)
                         {
-                            item.SegmentCode = param.Attributes.GetNamedItem("value").Value;
-                        }
-                        if (param.Attributes.GetNamedItem("name").Value == "circuit_number")
-                        {
-                            item.CircuitNumber = param.Attributes.GetNamedItem("value").Value;
-                        }
-                        if (param.Attributes.GetNamedItem("name").Value == "component_id")
-                        {
-                            item.ComponentID = param.Attributes.GetNamedItem("value").Value;
-                        }
-                        //因為傳回的COMPONENT中，是否良品都包含其中，需加入檢查結果來判斷
-                        if (param.Attributes.GetNamedItem("name").Value == "last_result")
-                        {
-                            item.LastResult = param.Attributes.GetNamedItem("value").Value;
+                            output.Add(item);
                         }
                     }
-                    //不正常檢測:last_result=3
-                    if (!item.LastResult.Equals("3"))
-                    {
-                        output.Add(item);
-                    }
-
                 }
+            }
+            else
+            {
+                //不良品
+                output.Add(new Inspection
+                {
+                    MachineName = MachineName,
+                    InspectionID = InspectionID,
+                    ComponentID = "99",
+                    SegmentCode = "04123|6789",
+                    SegmentNo = "1",
+                    CircuitNumber = "NEW001",
+                    LastResult = "1",
+                });
+                //正常品
+                output.Add(new Inspection
+                {
+                    MachineName = MachineName,
+                    InspectionID = InspectionID,
+                    ComponentID = "88",
+                    SegmentCode = "04123|6789",
+                    SegmentNo = "2",
+                    CircuitNumber = "NEW002",
+                    LastResult = "0",
+                });
             }
             return output;
         }
@@ -363,361 +390,862 @@ namespace Omron_csv
 
         #region test string for XML
         public string testXML = @"<?xml version=""1.0"" encoding=""UTF-8"" standalone=""yes""?>
-                    <resultDataM>
-                        <output>
-                            <data>
-                                <param value = ""VT-S500-0098"" name=""system_machine_name""/>
-                                <param value = ""VT-S500-0098"" name=""user_machine_name""/>
-                                <param value = ""87"" name=""project_id""/>
-                                <param value = ""4"" name=""project_revision""/>
-                                <param value = ""barcode test"" name=""board_name""/>
-                                <param value = ""190000.0"" name=""board_width""/>
-                                <param value = ""124200.0"" name=""board_height""/>
-                                <param value = ""1"" name=""program_id""/>
-                                <param value = ""4"" name=""program_revision""/>
-                                <param value = ""barcode test"" name=""program_name""/>
-                                <param value = ""0"" name=""board_side""/>
-                                <param value = ""2"" name=""inspection_process_type""/>
-                                <param value = ""1"" name=""machine_type""/>
-                                <param value = """" name=""mask_thickness""/>
-                                <param value = """" name=""pg_comment""/>
-                                <param value = ""20170607023559000"" name=""inspection_program_update""/>
-                                <param value = ""32"" name=""inspection_id""/>
-                                <param value = ""G23M-00303T"" name=""board_id""/>
-                                <param value = ""0607"" name=""lot""/>
-                                <param value = ""20170607023732000"" name=""inspection_end_time""/>
-                                <param value = """" name=""confirm_date""/>
-                                <param value = ""131"" name=""inspection_result_code""/>
-                                <param value = ""Wrong Component"" name=""inspection_result_name""/>
-                                <param value = """" name=""confirm_result_code""/>
-                                <param value = """" name=""confirm_result_name""/>
-                                <param value = ""0"" name=""user_confirm_flag""/>
-                                <param value = ""0"" name=""inspection_user_id""/>
-                                <param value = """" name=""inspection_user_name""/>
-                                <param value = """" name=""confirm_user_id""/>
-                                <param value = """" name=""confirm_user_name""/>
-                                <param value = ""0"" name=""line_stop_code""/>
-                                <param value = ""1"" name=""ng_point_count""/>
-                                <param value = ""1"" name=""Component_count""/>
-                                <param value = ""1"" name=""last_result""/>
-                            </data>
-                            <data>
-                                <param value = ""VT-S500-0098"" name=""system_machine_name""/>
-                                <param value = ""VT-S500-0098"" name=""user_machine_name""/>
-                                <param value = ""87"" name=""project_id""/>
-                                <param value = ""4"" name=""project_revision""/>
-                                <param value = ""barcode test"" name=""board_name""/>
-                                <param value = ""190000.0"" name=""board_width""/>
-                                <param value = ""124200.0"" name=""board_height""/>
-                                <param value = ""1"" name=""program_id""/>
-                                <param value = ""4"" name=""program_revision""/>
-                                <param value = ""barcode test"" name=""program_name""/>
-                                <param value = ""0"" name=""board_side""/>
-                                <param value = ""2"" name=""inspection_process_type""/>
-                                <param value = ""1"" name=""machine_type""/>
-                                <param value = """" name=""mask_thickness""/>
-                                <param value = """" name=""pg_comment""/>
-                                <param value = ""20170607023559000"" name=""inspection_program_update""/>
-                                <param value = ""33"" name=""inspection_id""/>
-                                <param value = ""G23M-00303T"" name=""board_id""/>
-                                <param value = ""0607"" name=""lot""/>
-                                <param value = ""20170607024237000"" name=""inspection_end_time""/>
-                                <param value = ""20170607024406000"" name=""confirm_date""/>
-                                <param value = ""131"" name=""inspection_result_code""/>
-                                <param value = ""Wrong Component"" name=""inspection_result_name""/>
-                                <param value = ""131"" name=""confirm_result_code""/>
-                                <param value = ""Wrong Component"" name=""confirm_result_name""/>
-                                <param value = ""0"" name=""user_confirm_flag""/>
-                                <param value = ""0"" name=""inspection_user_id""/>
-                                <param value = """" name=""inspection_user_name""/>
-                                <param value = ""2"" name=""confirm_user_id""/>
-                                <param value = ""prism"" name=""confirm_user_name""/>
-                                <param value = ""0"" name=""line_stop_code""/>
-                                <param value = ""1"" name=""ng_point_count""/>
-                                <param value = ""1"" name=""component_count""/>
-                                <param value = ""11"" name=""last_result""/>
-                            </data>
-                            <data>
-                                <param value = ""VT-S500-0098"" name=""system_machine_name""/>
-                                <param value = ""VT-S500-0098"" name=""user_machine_name""/>
-                                <param value = ""87"" name=""project_id""/>
-                                <param value = ""6"" name=""project_revision""/>
-                                <param value = ""barcode test"" name=""board_name""/>
-                                <param value = ""190000.0"" name=""board_width""/>
-                                <param value = ""124200.0"" name=""board_height""/>
-                                <param value = ""2"" name=""program_id""/>
-                                <param value = ""6"" name=""program_revision""/>
-                                <param value = ""barcode test_ok"" name=""program_name""/>
-                                <param value = ""0"" name=""board_side""/>
-                                <param value = ""2"" name=""inspection_process_type""/>
-                                <param value = ""1"" name=""machine_type""/>
-                                <param value = """" name=""mask_thickness""/>
-                                <param value = """" name=""pg_comment""/>
-                                <param value = ""20170607024924000"" name=""inspection_program_update""/>
-                                <param value = ""34"" name=""inspection_id""/>
-                                <param value = ""G23M-00303T"" name=""board_id""/>
-                                <param value = ""0607-OK"" name=""lot""/>
-                                <param value = ""20170607025157000"" name=""inspection_end_time""/>
-                                <param value = """" name=""confirm_date""/>
-                                <param value = ""0"" name=""inspection_result_code""/>
-                                <param value = ""OK"" name=""inspection_result_name""/>
-                                <param value = """" name=""confirm_result_code""/>
-                                <param value = """" name=""confirm_result_name""/>
-                                <param value = ""0"" name=""user_confirm_flag""/>
-                                <param value = ""0"" name=""inspection_user_id""/>
-                                <param value = """" name=""inspection_user_name""/>
-                                <param value = """" name=""confirm_user_id""/>
-                                <param value = """" name=""confirm_user_name""/>
-                                <param value = ""0"" name=""line_stop_code""/>
-                                <param value = ""0"" name=""ng_point_count""/>
-                                <param value = ""1"" name=""component_count""/>
-                                <param value = ""0"" name=""last_result""/>
-                            </data>
-                            <data>
-                                <param value = ""VT-S500-0098"" name=""system_machine_name""/>
-                                <param value = ""VT-S500-0098"" name=""user_machine_name""/>
-                                <param value = ""87"" name=""project_id""/>
-                                <param value = ""6"" name=""project_revision""/>
-                                <param value = ""barcode test"" name=""board_name""/>
-                                <param value = ""190000.0"" name=""board_width""/>
-                                <param value = ""124200.0"" name=""board_height""/>
-                                <param value = ""2"" name=""program_id""/>
-                                <param value = ""6"" name=""program_revision""/>
-                                <param value = ""barcode test_ok"" name=""program_name""/>
-                                <param value = ""0"" name=""board_side""/>
-                                <param value = ""2"" name=""inspection_process_type""/>
-                                <param value = ""1"" name=""machine_type""/>
-                                <param value = """" name=""mask_thickness""/>
-                                <param value = """" name=""pg_comment""/>
-                                <param value = ""20170607024924000"" name=""inspection_program_update""/>
-                                <param value = ""35"" name=""inspection_id""/>
-                                <param value = ""G23M-00303T"" name=""board_id""/>
-                                <param value = ""0607-OK"" name=""lot""/>
-                                <param value = ""20170607030200000"" name=""inspection_end_time""/>
-                                <param value = """" name=""confirm_date""/>
-                                <param value = ""0"" name=""inspection_result_code""/>
-                                <param value = ""OK"" name=""inspection_result_name""/>
-                                <param value = """" name=""confirm_result_code""/>
-                                <param value = """" name=""confirm_result_name""/>
-                                <param value = ""0"" name=""user_confirm_flag""/>
-                                <param value = ""0"" name=""inspection_user_id""/>
-                                <param value = """" name=""inspection_user_name""/>
-                                <param value = """" name=""confirm_user_id""/>
-                                <param value = """" name=""confirm_user_name""/>
-                                <param value = ""0"" name=""line_stop_code""/>
-                                <param value = ""0"" name=""ng_point_count""/>
-                                <param value = ""1"" name=""component_count""/>
-                                <param value = ""0"" name=""last_result""/>
-                            </data>
-                            <data>
-                                <param value = ""VT-S500-0098"" name=""system_machine_name""/>
-                                <param value = ""VT-S500-0098"" name=""user_machine_name""/>
-                                <param value = ""87"" name=""project_id""/>
-                                <param value = ""8"" name=""project_revision""/>
-                                <param value = ""barcode test"" name=""board_name""/>
-                                <param value = ""190000.0"" name=""board_width""/>
-                                <param value = ""124200.0"" name=""board_height""/>
-                                <param value = ""1"" name=""program_id""/>
-                                <param value = ""6"" name=""program_revision""/>
-                                <param value = ""barcode test"" name=""program_name""/>
-                                <param value = ""0"" name=""board_side""/>
-                                <param value = ""2"" name=""inspection_process_type""/>
-                                <param value = ""1"" name=""machine_type""/>
-                                <param value = """" name=""mask_thickness""/>
-                                <param value = """" name=""pg_comment""/>
-                                <param value = ""20170607031314000"" name=""inspection_program_update""/>
-                                <param value = ""36"" name=""inspection_id""/>
-                                <param value = ""G23M-00303T"" name=""board_id""/>
-                                <param value = ""0607-1"" name=""lot""/>
-                                <param value = ""20170607031541000"" name=""inspection_end_time""/>
-                                <param value = ""20170607031849000"" name=""confirm_date""/>
-                                <param value = ""131"" name=""inspection_result_code""/>
-                                <param value = ""Wrong Component"" name=""inspection_result_name""/>
-                                <param value = ""131"" name=""confirm_result_code""/>
-                                <param value = ""Wrong Component"" name=""confirm_result_name""/>
-                                <param value = ""0"" name=""user_confirm_flag""/>
-                                <param value = ""0"" name=""inspection_user_id""/>
-                                <param value = """" name=""inspection_user_name""/>
-                                <param value = ""2"" name=""confirm_user_id""/>
-                                <param value = ""prism"" name=""confirm_user_name""/>
-                                <param value = ""0"" name=""line_stop_code""/>
-                                <param value = ""1"" name=""ng_point_count""/>
-                                <param value = ""2"" name=""component_count""/>
-                                <param value = ""11"" name=""last_result""/>
-                            </data>
-                            <data>
-                                <param value = ""VT-S500-0098"" name=""system_machine_name""/>
-                                <param value = ""VT-S500-0098"" name=""user_machine_name""/>
-                                <param value = ""87"" name=""project_id""/>
-                                <param value = ""10"" name=""project_revision""/>
-                                <param value = ""barcode test"" name=""board_name""/>
-                                <param value = ""190000.0"" name=""board_width""/>
-                                <param value = ""124200.0"" name=""board_height""/>
-                                <param value = ""1"" name=""program_id""/>
-                                <param value = ""8"" name=""program_revision""/>
-                                <param value = ""barcode test"" name=""program_name""/>
-                                <param value = ""0"" name=""board_side""/>
-                                <param value = ""2"" name=""inspection_process_type""/>
-                                <param value = ""1"" name=""machine_type""/>
-                                <param value = """" name=""mask_thickness""/>
-                                <param value = """" name=""pg_comment""/>
-                                <param value = ""20170607033715000"" name=""inspection_program_update""/>
-                                <param value = ""37"" name=""inspection_id""/>
-                                <param value = ""G23M-00303T"" name=""board_id""/>
-                                <param value = ""0607-1"" name=""lot""/>
-                                <param value = ""20170607033829000"" name=""inspection_end_time""/>
-                                <param value = ""20170607033948000"" name=""confirm_date""/>
-                                <param value = ""131"" name=""inspection_result_code""/>
-                                <param value = ""Wrong Component"" name=""inspection_result_name""/>
-                                <param value = ""131"" name=""confirm_result_code""/>
-                                <param value = ""Wrong Component"" name=""confirm_result_name""/>
-                                <param value = ""0"" name=""user_confirm_flag""/>
-                                <param value = ""0"" name=""inspection_user_id""/>
-                                <param value = """" name=""inspection_user_name""/>
-                                <param value = ""2"" name=""confirm_user_id""/>
-                                <param value = ""prism"" name=""confirm_user_name""/>
-                                <param value = ""0"" name=""line_stop_code""/>
-                                <param value = ""7"" name=""ng_point_count""/>
-                                <param value = ""16"" name=""component_count""/>
-                                <param value = ""11"" name=""last_result""/>
-                            </data>
-                        </output>
-                        <recordCount>6</recordCount>
-                        <returnCode>0</returnCode>
-                    </resultDataM>";
-        //
-        public string testXML_component = @"<?xml version=""1.0"" encoding=""UTF-8"" standalone=""yes""?>
-                            <resultDataM>
-                                <output>
-                                    <data>
-                                        <param value = ""1"" name=""component_id""/>
-                                        <param value = ""1"" name=""segment_id""/>
-                                        <param value = ""1"" name=""segment_no""/>
-                                        <param value = ""04123|6789"" name=""segment_code""/>
-                                        <param value = ""NEW001"" name=""circuit_number""/>
-                                        <param value = ""1413"" name=""component_number_id""/>
-                                        <param value = ""1"" name=""component_number_revision""/>
-                                        <param value = ""NEWCOMPNO.1413"" name=""component_number_name""/>
-                                        <param value = ""2"" name=""component_type_code""/>
-                                        <param value = ""Chip Capacitor"" name=""component_type_name""/>
-                                        <param value = ""77207.0"" name=""pos_x""/>
-                                        <param value = ""116015.0"" name=""pos_y""/>
-                                        <param value = ""890.0"" name=""size_x""/>
-                                        <param value = ""1060.0"" name=""size_y""/>
-                                        <param value = ""90"" name=""component_angle""/>
-                                        <param value = ""0"" name=""individual_flag""/>
-                                        <param value = ""4"" name=""window_count""/>
-                                        <param value = ""131"" name=""inspection_result_code""/>
-                                        <param value = ""Wrong Component"" name=""inspection_result_name""/>
-                                        <param value = """" name=""confirm_result_code""/>
-                                        <param value = """" name=""confirm_result_name""/>
-                                        <param value = ""0"" name=""user_confirm_flag""/>
-                                        <param value = ""1"" name=""last_result""/>
-                                    </data>
-                                    <data>
-                                        <param value = ""900001"" name=""component_id""/>
-                                        <param value = ""0"" name=""segment_id""/>
-                                        <param value = ""0"" name=""segment_no""/>
-                                        <param value = """" name=""segment_code""/>
-                                        <param value = ""Visual Field"" name=""circuit_number""/>
-                                        <param value = ""-1"" name=""component_number_id""/>
-                                        <param value = ""-1"" name=""component_number_revision""/>
-                                        <param value = ""Foreign Material Detection (Entire PCB)"" name=""component_number_name""/>
-                                        <param value = ""-1"" name=""component_type_code""/>
-                                        <param value = ""Foreign Material Detection (Entire PCB)"" name=""component_type_name""/>
-                                        <param value = ""167520.0"" name=""pos_x""/>
-                                        <param value = ""113405.0"" name=""pos_y""/>
-                                        <param value = ""24480.0"" name=""size_x""/>
-                                        <param value = ""20480.0"" name=""size_y""/>
-                                        <param value = ""0"" name=""component_angle""/>
-                                        <param value = ""0"" name=""individual_flag""/>
-                                        <param value = ""1"" name=""window_count""/>
-                                        <param value = ""1"" name=""inspection_result_code""/>
-                                        <param value = ""Except Inspection"" name=""inspection_result_name""/>
-                                        <param value = """" name=""confirm_result_code""/>
-                                        <param value = """" name=""confirm_result_name""/>
-                                        <param value = ""0"" name=""user_confirm_flag""/>
-                                        <param value = ""3"" name=""last_result""/>
-                                    </data>
-                                    <data>
-                                        <param value = ""900002"" name=""component_id""/>
-                                        <param value = ""0"" name=""segment_id""/>
-                                        <param value = ""0"" name=""segment_no""/>
-                                        <param value = """" name=""segment_code""/>
-                                        <param value = ""Visual Field"" name=""circuit_number""/>
-                                        <param value = ""-1"" name=""component_number_id""/>
-                                        <param value = ""-1"" name=""component_number_revision""/>
-                                        <param value = ""Foreign Material Detection (Entire PCB)"" name=""component_number_name""/>
-                                        <param value = ""-1"" name=""component_type_code""/>
-                                        <param value = ""Foreign Material Detection (Entire PCB)"" name=""component_type_name""/>
-                                        <param value = ""-2000.0"" name=""pos_x""/>
-                                        <param value = ""28860.0"" name=""pos_y""/>
-                                        <param value = ""24480.0"" name=""size_x""/>
-                                        <param value = ""20480.0"" name=""size_y""/>
-                                        <param value = ""0"" name=""component_angle""/>
-                                        <param value = ""0"" name=""individual_flag""/>
-                                        <param value = ""1"" name=""window_count""/>
-                                        <param value = ""1"" name=""inspection_result_code""/>
-                                        <param value = ""Except Inspection"" name=""inspection_result_name""/>
-                                        <param value = """" name=""confirm_result_code""/>
-                                        <param value = """" name=""confirm_result_name""/>
-                                        <param value = ""0"" name=""user_confirm_flag""/>
-                                        <param value = ""3"" name=""last_result""/>
-                                    </data>
-                                    <data>
-                                        <param value = ""900003"" name=""component_id""/>
-                                        <param value = ""0"" name=""segment_id""/>
-                                        <param value = ""0"" name=""segment_no""/>
-                                        <param value = """" name=""segment_code""/>
-                                        <param value = ""Visual Field"" name=""circuit_number""/>
-                                        <param value = ""-1"" name=""component_number_id""/>
-                                        <param value = ""-1"" name=""component_number_revision""/>
-                                        <param value = ""Foreign Material Detection (Entire PCB)"" name=""component_number_name""/>
-                                        <param value = ""-1"" name=""component_type_code""/>
-                                        <param value = ""Foreign Material Detection (Entire PCB)"" name=""component_type_name""/>
-                                        <param value = ""-2000.0"" name=""pos_x""/>
-                                        <param value = ""46090.0"" name=""pos_y""/>
-                                        <param value = ""24480.0"" name=""size_x""/>
-                                        <param value = ""20480.0"" name=""size_y""/>
-                                        <param value = ""0"" name=""component_angle""/>
-                                        <param value = ""0"" name=""individual_flag""/>
-                                        <param value = ""1"" name=""window_count""/>
-                                        <param value = ""1"" name=""inspection_result_code""/>
-                                        <param value = ""Except Inspection"" name=""inspection_result_name""/>
-                                        <param value = """" name=""confirm_result_code""/>
-                                        <param value = """" name=""confirm_result_name""/>
-                                        <param value = ""0"" name=""user_confirm_flag""/>
-                                        <param value = ""3"" name=""last_result""/>
-                                    </data>
-                                    <data>
-                                        <param value = ""900004"" name=""component_id""/>
-                                        <param value = ""0"" name=""segment_id""/>
-                                        <param value = ""0"" name=""segment_no""/>
-                                        <param value = """" name=""segment_code""/>
-                                        <param value = ""Visual Field"" name=""circuit_number""/>
-                                        <param value = ""-1"" name=""component_number_id""/>
-                                        <param value = ""-1"" name=""component_number_revision""/>
-                                        <param value = ""Foreign Material Detection (Entire PCB)"" name=""component_number_name""/>
-                                        <param value = ""-1"" name=""component_type_code""/>
-                                        <param value = ""Foreign Material Detection (Entire PCB)"" name=""component_type_name""/>
-                                        <param value = ""72189.0"" name=""pos_x""/>
-                                        <param value = ""123861.0"" name=""pos_y""/>
-                                        <param value = ""24480.0"" name=""size_x""/>
-                                        <param value = ""20480.0"" name=""size_y""/>
-                                        <param value = ""0"" name=""component_angle""/>
-                                        <param value = ""0"" name=""individual_flag""/>
-                                        <param value = ""1"" name=""window_count""/>
-                                        <param value = ""1"" name=""inspection_result_code""/>
-                                        <param value = ""Except Inspection"" name=""inspection_result_name""/>
-                                        <param value = """" name=""confirm_result_code""/>
-                                        <param value = """" name=""confirm_result_name""/>
-                                        <param value = ""0"" name=""user_confirm_flag""/>
-                                        <param value = ""3"" name=""last_result""/>
-                                    </data>
-                                </output>
-                                <recordCount>5</recordCount>
-                                <returnCode>0</returnCode>
-                            </resultDataM>";
+<resultDataM>
+    <output>
+        <data>
+            <param value = ""1"" name=""component_id""/>
+            <param value = ""1"" name=""segment_id""/>
+            <param value = ""1"" name=""segment_no""/>
+            <param value = ""G23M-00303T"" name=""segment_code""/>
+            <param value = ""C1"" name=""circuit_number""/>
+            <param value = ""72"" name=""component_number_id""/>
+            <param value = ""1"" name=""component_number_revision""/>
+            <param value = ""NEWCOMPNO.80"" name=""component_number_name""/>
+            <param value = ""2"" name=""component_type_code""/>
+            <param value = ""Chip Capacitor"" name=""component_type_name""/>
+            <param value = ""32800.0"" name=""pos_x""/>
+            <param value = ""21713.0"" name=""pos_y""/>
+            <param value = ""440.0"" name=""size_x""/>
+            <param value = ""480.0"" name=""size_y""/>
+            <param value = ""360"" name=""component_angle""/>
+            <param value = ""0"" name=""individual_flag""/>
+            <param value = ""4"" name=""window_count""/>
+            <param value = ""0"" name=""inspection_result_code""/>
+            <param value = ""OK"" name=""inspection_result_name""/>
+            <param value = """" name=""confirm_result_code""/>
+            <param value = """" name=""confirm_result_name""/>
+            <param value = ""0"" name=""user_confirm_flag""/>
+            <param value = ""0"" name=""last_result""/>
+        </data>
+        <data>
+            <param value = ""2"" name=""component_id""/>
+            <param value = ""1"" name=""segment_id""/>
+            <param value = ""1"" name=""segment_no""/>
+            <param value = ""G23M-00303T"" name=""segment_code""/>
+            <param value = ""C2"" name=""circuit_number""/>
+            <param value = ""72"" name=""component_number_id""/>
+            <param value = ""1"" name=""component_number_revision""/>
+            <param value = ""NEWCOMPNO.80"" name=""component_number_name""/>
+            <param value = ""2"" name=""component_type_code""/>
+            <param value = ""Chip Capacitor"" name=""component_type_name""/>
+            <param value = ""41050.0"" name=""pos_x""/>
+            <param value = ""28961.0"" name=""pos_y""/>
+            <param value = ""440.0"" name=""size_x""/>
+            <param value = ""480.0"" name=""size_y""/>
+            <param value = ""0"" name=""component_angle""/>
+            <param value = ""0"" name=""individual_flag""/>
+            <param value = ""4"" name=""window_count""/>
+            <param value = ""0"" name=""inspection_result_code""/>
+            <param value = ""OK"" name=""inspection_result_name""/>
+            <param value = """" name=""confirm_result_code""/>
+            <param value = """" name=""confirm_result_name""/>
+            <param value = ""0"" name=""user_confirm_flag""/>
+            <param value = ""0"" name=""last_result""/>
+        </data>
+        <data>
+            <param value = ""3"" name=""component_id""/>
+            <param value = ""1"" name=""segment_id""/>
+            <param value = ""1"" name=""segment_no""/>
+            <param value = ""G23M-00303T"" name=""segment_code""/>
+            <param value = ""C3"" name=""circuit_number""/>
+            <param value = ""72"" name=""component_number_id""/>
+            <param value = ""1"" name=""component_number_revision""/>
+            <param value = ""NEWCOMPNO.80"" name=""component_number_name""/>
+            <param value = ""2"" name=""component_type_code""/>
+            <param value = ""Chip Capacitor"" name=""component_type_name""/>
+            <param value = ""15049.0"" name=""pos_x""/>
+            <param value = ""56061.0"" name=""pos_y""/>
+            <param value = ""440.0"" name=""size_x""/>
+            <param value = ""480.0"" name=""size_y""/>
+            <param value = ""0"" name=""component_angle""/>
+            <param value = ""0"" name=""individual_flag""/>
+            <param value = ""4"" name=""window_count""/>
+            <param value = ""0"" name=""inspection_result_code""/>
+            <param value = ""OK"" name=""inspection_result_name""/>
+            <param value = """" name=""confirm_result_code""/>
+            <param value = """" name=""confirm_result_name""/>
+            <param value = ""0"" name=""user_confirm_flag""/>
+            <param value = ""0"" name=""last_result""/>
+        </data>
+        <data>
+            <param value = ""4"" name=""component_id""/>
+            <param value = ""1"" name=""segment_id""/>
+            <param value = ""1"" name=""segment_no""/>
+            <param value = ""G23M-00303T"" name=""segment_code""/>
+            <param value = ""C4"" name=""circuit_number""/>
+            <param value = ""72"" name=""component_number_id""/>
+            <param value = ""1"" name=""component_number_revision""/>
+            <param value = ""NEWCOMPNO.80"" name=""component_number_name""/>
+            <param value = ""2"" name=""component_type_code""/>
+            <param value = ""Chip Capacitor"" name=""component_type_name""/>
+            <param value = ""54955.0"" name=""pos_x""/>
+            <param value = ""58419.0"" name=""pos_y""/>
+            <param value = ""440.0"" name=""size_x""/>
+            <param value = ""480.0"" name=""size_y""/>
+            <param value = ""0"" name=""component_angle""/>
+            <param value = ""0"" name=""individual_flag""/>
+            <param value = ""4"" name=""window_count""/>
+            <param value = ""0"" name=""inspection_result_code""/>
+            <param value = ""OK"" name=""inspection_result_name""/>
+            <param value = """" name=""confirm_result_code""/>
+            <param value = """" name=""confirm_result_name""/>
+            <param value = ""0"" name=""user_confirm_flag""/>
+            <param value = ""0"" name=""last_result""/>
+        </data>
+        <data>
+            <param value = ""5"" name=""component_id""/>
+            <param value = ""1"" name=""segment_id""/>
+            <param value = ""1"" name=""segment_no""/>
+            <param value = ""G23M-00303T"" name=""segment_code""/>
+            <param value = ""C5"" name=""circuit_number""/>
+            <param value = ""72"" name=""component_number_id""/>
+            <param value = ""1"" name=""component_number_revision""/>
+            <param value = ""NEWCOMPNO.80"" name=""component_number_name""/>
+            <param value = ""2"" name=""component_type_code""/>
+            <param value = ""Chip Capacitor"" name=""component_type_name""/>
+            <param value = ""106445.0"" name=""pos_x""/>
+            <param value = ""43559.0"" name=""pos_y""/>
+            <param value = ""440.0"" name=""size_x""/>
+            <param value = ""480.0"" name=""size_y""/>
+            <param value = ""0"" name=""component_angle""/>
+            <param value = ""0"" name=""individual_flag""/>
+            <param value = ""4"" name=""window_count""/>
+            <param value = ""0"" name=""inspection_result_code""/>
+            <param value = ""OK"" name=""inspection_result_name""/>
+            <param value = """" name=""confirm_result_code""/>
+            <param value = """" name=""confirm_result_name""/>
+            <param value = ""0"" name=""user_confirm_flag""/>
+            <param value = ""0"" name=""last_result""/>
+        </data>
+        <data>
+            <param value = ""6"" name=""component_id""/>
+            <param value = ""2"" name=""segment_id""/>
+            <param value = ""3"" name=""segment_no""/>
+            <param value = ""G23M-00303T"" name=""segment_code""/>
+            <param value = ""C1"" name=""circuit_number""/>
+            <param value = ""72"" name=""component_number_id""/>
+            <param value = ""1"" name=""component_number_revision""/>
+            <param value = ""NEWCOMPNO.80"" name=""component_number_name""/>
+            <param value = ""2"" name=""component_type_code""/>
+            <param value = ""Chip Capacitor"" name=""component_type_name""/>
+            <param value = ""159584.0"" name=""pos_x""/>
+            <param value = ""47332.0"" name=""pos_y""/>
+            <param value = ""440.0"" name=""size_x""/>
+            <param value = ""480.0"" name=""size_y""/>
+            <param value = ""180"" name=""component_angle""/>
+            <param value = ""0"" name=""individual_flag""/>
+            <param value = ""4"" name=""window_count""/>
+            <param value = ""0"" name=""inspection_result_code""/>
+            <param value = ""OK"" name=""inspection_result_name""/>
+            <param value = """" name=""confirm_result_code""/>
+            <param value = """" name=""confirm_result_name""/>
+            <param value = ""0"" name=""user_confirm_flag""/>
+            <param value = ""0"" name=""last_result""/>
+        </data>
+        <data>
+            <param value = ""7"" name=""component_id""/>
+            <param value = ""2"" name=""segment_id""/>
+            <param value = ""3"" name=""segment_no""/>
+            <param value = ""G23M-00303T"" name=""segment_code""/>
+            <param value = ""C2"" name=""circuit_number""/>
+            <param value = ""72"" name=""component_number_id""/>
+            <param value = ""1"" name=""component_number_revision""/>
+            <param value = ""NEWCOMPNO.80"" name=""component_number_name""/>
+            <param value = ""2"" name=""component_type_code""/>
+            <param value = ""Chip Capacitor"" name=""component_type_name""/>
+            <param value = ""151352.0"" name=""pos_x""/>
+            <param value = ""40074.0"" name=""pos_y""/>
+            <param value = ""440.0"" name=""size_x""/>
+            <param value = ""480.0"" name=""size_y""/>
+            <param value = ""180"" name=""component_angle""/>
+            <param value = ""0"" name=""individual_flag""/>
+            <param value = ""4"" name=""window_count""/>
+            <param value = ""0"" name=""inspection_result_code""/>
+            <param value = ""OK"" name=""inspection_result_name""/>
+            <param value = """" name=""confirm_result_code""/>
+            <param value = """" name=""confirm_result_name""/>
+            <param value = ""0"" name=""user_confirm_flag""/>
+            <param value = ""0"" name=""last_result""/>
+        </data>
+        <data>
+            <param value = ""8"" name=""component_id""/>
+            <param value = ""2"" name=""segment_id""/>
+            <param value = ""3"" name=""segment_no""/>
+            <param value = ""G23M-00303T"" name=""segment_code""/>
+            <param value = ""C3"" name=""circuit_number""/>
+            <param value = ""72"" name=""component_number_id""/>
+            <param value = ""1"" name=""component_number_revision""/>
+            <param value = ""NEWCOMPNO.80"" name=""component_number_name""/>
+            <param value = ""2"" name=""component_type_code""/>
+            <param value = ""Chip Capacitor"" name=""component_type_name""/>
+            <param value = ""177334.0"" name=""pos_x""/>
+            <param value = ""12984.0"" name=""pos_y""/>
+            <param value = ""440.0"" name=""size_x""/>
+            <param value = ""480.0"" name=""size_y""/>
+            <param value = ""180"" name=""component_angle""/>
+            <param value = ""0"" name=""individual_flag""/>
+            <param value = ""4"" name=""window_count""/>
+            <param value = ""0"" name=""inspection_result_code""/>
+            <param value = ""OK"" name=""inspection_result_name""/>
+            <param value = """" name=""confirm_result_code""/>
+            <param value = """" name=""confirm_result_name""/>
+            <param value = ""0"" name=""user_confirm_flag""/>
+            <param value = ""0"" name=""last_result""/>
+        </data>
+        <data>
+            <param value = ""9"" name=""component_id""/>
+            <param value = ""2"" name=""segment_id""/>
+            <param value = ""3"" name=""segment_no""/>
+            <param value = ""G23M-00303T"" name=""segment_code""/>
+            <param value = ""C4"" name=""circuit_number""/>
+            <param value = ""72"" name=""component_number_id""/>
+            <param value = ""1"" name=""component_number_revision""/>
+            <param value = ""NEWCOMPNO.80"" name=""component_number_name""/>
+            <param value = ""2"" name=""component_type_code""/>
+            <param value = ""Chip Capacitor"" name=""component_type_name""/>
+            <param value = ""137449.0"" name=""pos_x""/>
+            <param value = ""10627.0"" name=""pos_y""/>
+            <param value = ""440.0"" name=""size_x""/>
+            <param value = ""480.0"" name=""size_y""/>
+            <param value = ""180"" name=""component_angle""/>
+            <param value = ""0"" name=""individual_flag""/>
+            <param value = ""4"" name=""window_count""/>
+            <param value = ""0"" name=""inspection_result_code""/>
+            <param value = ""OK"" name=""inspection_result_name""/>
+            <param value = """" name=""confirm_result_code""/>
+            <param value = """" name=""confirm_result_name""/>
+            <param value = ""0"" name=""user_confirm_flag""/>
+            <param value = ""0"" name=""last_result""/>
+        </data>
+        <data>
+            <param value = ""10"" name=""component_id""/>
+            <param value = ""2"" name=""segment_id""/>
+            <param value = ""3"" name=""segment_no""/>
+            <param value = ""G23M-00303T"" name=""segment_code""/>
+            <param value = ""C5"" name=""circuit_number""/>
+            <param value = ""72"" name=""component_number_id""/>
+            <param value = ""1"" name=""component_number_revision""/>
+            <param value = ""NEWCOMPNO.80"" name=""component_number_name""/>
+            <param value = ""2"" name=""component_type_code""/>
+            <param value = ""Chip Capacitor"" name=""component_type_name""/>
+            <param value = ""85949.0"" name=""pos_x""/>
+            <param value = ""25435.0"" name=""pos_y""/>
+            <param value = ""440.0"" name=""size_x""/>
+            <param value = ""480.0"" name=""size_y""/>
+            <param value = ""180"" name=""component_angle""/>
+            <param value = ""0"" name=""individual_flag""/>
+            <param value = ""4"" name=""window_count""/>
+            <param value = ""0"" name=""inspection_result_code""/>
+            <param value = ""OK"" name=""inspection_result_name""/>
+            <param value = """" name=""confirm_result_code""/>
+            <param value = """" name=""confirm_result_name""/>
+            <param value = ""0"" name=""user_confirm_flag""/>
+            <param value = ""0"" name=""last_result""/>
+        </data>
+        <data>
+            <param value = ""11"" name=""component_id""/>
+            <param value = ""3"" name=""segment_id""/>
+            <param value = ""4"" name=""segment_no""/>
+            <param value = ""04123|6789"" name=""segment_code""/>
+            <param value = ""C1"" name=""circuit_number""/>
+            <param value = ""72"" name=""component_number_id""/>
+            <param value = ""1"" name=""component_number_revision""/>
+            <param value = ""NEWCOMPNO.80"" name=""component_number_name""/>
+            <param value = ""2"" name=""component_type_code""/>
+            <param value = ""Chip Capacitor"" name=""component_type_name""/>
+            <param value = ""159604.0"" name=""pos_x""/>
+            <param value = ""103664.0"" name=""pos_y""/>
+            <param value = ""440.0"" name=""size_x""/>
+            <param value = ""480.0"" name=""size_y""/>
+            <param value = ""180"" name=""component_angle""/>
+            <param value = ""0"" name=""individual_flag""/>
+            <param value = ""4"" name=""window_count""/>
+            <param value = ""0"" name=""inspection_result_code""/>
+            <param value = ""OK"" name=""inspection_result_name""/>
+            <param value = """" name=""confirm_result_code""/>
+            <param value = """" name=""confirm_result_name""/>
+            <param value = ""0"" name=""user_confirm_flag""/>
+            <param value = ""0"" name=""last_result""/>
+        </data>
+        <data>
+            <param value = ""12"" name=""component_id""/>
+            <param value = ""3"" name=""segment_id""/>
+            <param value = ""4"" name=""segment_no""/>
+            <param value = ""04123|6789"" name=""segment_code""/>
+            <param value = ""C2"" name=""circuit_number""/>
+            <param value = ""72"" name=""component_number_id""/>
+            <param value = ""1"" name=""component_number_revision""/>
+            <param value = ""NEWCOMPNO.80"" name=""component_number_name""/>
+            <param value = ""2"" name=""component_type_code""/>
+            <param value = ""Chip Capacitor"" name=""component_type_name""/>
+            <param value = ""151343.0"" name=""pos_x""/>
+            <param value = ""96455.0"" name=""pos_y""/>
+            <param value = ""440.0"" name=""size_x""/>
+            <param value = ""480.0"" name=""size_y""/>
+            <param value = ""180"" name=""component_angle""/>
+            <param value = ""0"" name=""individual_flag""/>
+            <param value = ""4"" name=""window_count""/>
+            <param value = ""0"" name=""inspection_result_code""/>
+            <param value = ""OK"" name=""inspection_result_name""/>
+            <param value = """" name=""confirm_result_code""/>
+            <param value = """" name=""confirm_result_name""/>
+            <param value = ""0"" name=""user_confirm_flag""/>
+            <param value = ""0"" name=""last_result""/>
+        </data>
+        <data>
+            <param value = ""13"" name=""component_id""/>
+            <param value = ""3"" name=""segment_id""/>
+            <param value = ""4"" name=""segment_no""/>
+            <param value = ""04123|6789"" name=""segment_code""/>
+            <param value = ""C3"" name=""circuit_number""/>
+            <param value = ""72"" name=""component_number_id""/>
+            <param value = ""1"" name=""component_number_revision""/>
+            <param value = ""NEWCOMPNO.80"" name=""component_number_name""/>
+            <param value = ""2"" name=""component_type_code""/>
+            <param value = ""Chip Capacitor"" name=""component_type_name""/>
+            <param value = ""177373.0"" name=""pos_x""/>
+            <param value = ""69305.0"" name=""pos_y""/>
+            <param value = ""440.0"" name=""size_x""/>
+            <param value = ""480.0"" name=""size_y""/>
+            <param value = ""180"" name=""component_angle""/>
+            <param value = ""0"" name=""individual_flag""/>
+            <param value = ""4"" name=""window_count""/>
+            <param value = ""0"" name=""inspection_result_code""/>
+            <param value = ""OK"" name=""inspection_result_name""/>
+            <param value = """" name=""confirm_result_code""/>
+            <param value = """" name=""confirm_result_name""/>
+            <param value = ""0"" name=""user_confirm_flag""/>
+            <param value = ""0"" name=""last_result""/>
+        </data>
+        <data>
+            <param value = ""14"" name=""component_id""/>
+            <param value = ""3"" name=""segment_id""/>
+            <param value = ""4"" name=""segment_no""/>
+            <param value = ""04123|6789"" name=""segment_code""/>
+            <param value = ""C4"" name=""circuit_number""/>
+            <param value = ""72"" name=""component_number_id""/>
+            <param value = ""1"" name=""component_number_revision""/>
+            <param value = ""NEWCOMPNO.80"" name=""component_number_name""/>
+            <param value = ""2"" name=""component_type_code""/>
+            <param value = ""Chip Capacitor"" name=""component_type_name""/>
+            <param value = ""137438.0"" name=""pos_x""/>
+            <param value = ""66939.0"" name=""pos_y""/>
+            <param value = ""440.0"" name=""size_x""/>
+            <param value = ""480.0"" name=""size_y""/>
+            <param value = ""180"" name=""component_angle""/>
+            <param value = ""0"" name=""individual_flag""/>
+            <param value = ""4"" name=""window_count""/>
+            <param value = ""0"" name=""inspection_result_code""/>
+            <param value = ""OK"" name=""inspection_result_name""/>
+            <param value = """" name=""confirm_result_code""/>
+            <param value = """" name=""confirm_result_name""/>
+            <param value = ""0"" name=""user_confirm_flag""/>
+            <param value = ""0"" name=""last_result""/>
+        </data>
+        <data>
+            <param value = ""15"" name=""component_id""/>
+            <param value = ""3"" name=""segment_id""/>
+            <param value = ""4"" name=""segment_no""/>
+            <param value = ""04123|6789"" name=""segment_code""/>
+            <param value = ""C5"" name=""circuit_number""/>
+            <param value = ""72"" name=""component_number_id""/>
+            <param value = ""1"" name=""component_number_revision""/>
+            <param value = ""NEWCOMPNO.80"" name=""component_number_name""/>
+            <param value = ""2"" name=""component_type_code""/>
+            <param value = ""Chip Capacitor"" name=""component_type_name""/>
+            <param value = ""85969.0"" name=""pos_x""/>
+            <param value = ""81805.0"" name=""pos_y""/>
+            <param value = ""440.0"" name=""size_x""/>
+            <param value = ""480.0"" name=""size_y""/>
+            <param value = ""180"" name=""component_angle""/>
+            <param value = ""0"" name=""individual_flag""/>
+            <param value = ""4"" name=""window_count""/>
+            <param value = ""0"" name=""inspection_result_code""/>
+            <param value = ""OK"" name=""inspection_result_name""/>
+            <param value = """" name=""confirm_result_code""/>
+            <param value = """" name=""confirm_result_name""/>
+            <param value = ""0"" name=""user_confirm_flag""/>
+            <param value = ""0"" name=""last_result""/>
+        </data>
+        <data>
+            <param value = ""16"" name=""component_id""/>
+            <param value = ""4"" name=""segment_id""/>
+            <param value = ""2"" name=""segment_no""/>
+            <param value = ""04123|6789"" name=""segment_code""/>
+            <param value = ""C1"" name=""circuit_number""/>
+            <param value = ""72"" name=""component_number_id""/>
+            <param value = ""1"" name=""component_number_revision""/>
+            <param value = ""NEWCOMPNO.80"" name=""component_number_name""/>
+            <param value = ""2"" name=""component_type_code""/>
+            <param value = ""Chip Capacitor"" name=""component_type_name""/>
+            <param value = ""32829.0"" name=""pos_x""/>
+            <param value = ""78014.0"" name=""pos_y""/>
+            <param value = ""440.0"" name=""size_x""/>
+            <param value = ""480.0"" name=""size_y""/>
+            <param value = ""360"" name=""component_angle""/>
+            <param value = ""0"" name=""individual_flag""/>
+            <param value = ""4"" name=""window_count""/>
+            <param value = ""0"" name=""inspection_result_code""/>
+            <param value = ""OK"" name=""inspection_result_name""/>
+            <param value = """" name=""confirm_result_code""/>
+            <param value = """" name=""confirm_result_name""/>
+            <param value = ""0"" name=""user_confirm_flag""/>
+            <param value = ""0"" name=""last_result""/>
+        </data>
+        <data>
+            <param value = ""17"" name=""component_id""/>
+            <param value = ""4"" name=""segment_id""/>
+            <param value = ""2"" name=""segment_no""/>
+            <param value = ""04123|6789"" name=""segment_code""/>
+            <param value = ""C2"" name=""circuit_number""/>
+            <param value = ""72"" name=""component_number_id""/>
+            <param value = ""1"" name=""component_number_revision""/>
+            <param value = ""NEWCOMPNO.80"" name=""component_number_name""/>
+            <param value = ""2"" name=""component_type_code""/>
+            <param value = ""Chip Capacitor"" name=""component_type_name""/>
+            <param value = ""41060.0"" name=""pos_x""/>
+            <param value = ""85313.0"" name=""pos_y""/>
+            <param value = ""440.0"" name=""size_x""/>
+            <param value = ""480.0"" name=""size_y""/>
+            <param value = ""360"" name=""component_angle""/>
+            <param value = ""0"" name=""individual_flag""/>
+            <param value = ""4"" name=""window_count""/>
+            <param value = ""0"" name=""inspection_result_code""/>
+            <param value = ""OK"" name=""inspection_result_name""/>
+            <param value = """" name=""confirm_result_code""/>
+            <param value = """" name=""confirm_result_name""/>
+            <param value = ""0"" name=""user_confirm_flag""/>
+            <param value = ""0"" name=""last_result""/>
+        </data>
+        <data>
+            <param value = ""18"" name=""component_id""/>
+            <param value = ""4"" name=""segment_id""/>
+            <param value = ""2"" name=""segment_no""/>
+            <param value = ""04123|6789"" name=""segment_code""/>
+            <param value = ""C3"" name=""circuit_number""/>
+            <param value = ""72"" name=""component_number_id""/>
+            <param value = ""1"" name=""component_number_revision""/>
+            <param value = ""NEWCOMPNO.80"" name=""component_number_name""/>
+            <param value = ""2"" name=""component_type_code""/>
+            <param value = ""Chip Capacitor"" name=""component_type_name""/>
+            <param value = ""15058.0"" name=""pos_x""/>
+            <param value = ""112402.0"" name=""pos_y""/>
+            <param value = ""440.0"" name=""size_x""/>
+            <param value = ""480.0"" name=""size_y""/>
+            <param value = ""0"" name=""component_angle""/>
+            <param value = ""0"" name=""individual_flag""/>
+            <param value = ""4"" name=""window_count""/>
+            <param value = ""0"" name=""inspection_result_code""/>
+            <param value = ""OK"" name=""inspection_result_name""/>
+            <param value = """" name=""confirm_result_code""/>
+            <param value = """" name=""confirm_result_name""/>
+            <param value = ""0"" name=""user_confirm_flag""/>
+            <param value = ""0"" name=""last_result""/>
+        </data>
+        <data>
+            <param value = ""19"" name=""component_id""/>
+            <param value = ""4"" name=""segment_id""/>
+            <param value = ""2"" name=""segment_no""/>
+            <param value = ""04123|6789"" name=""segment_code""/>
+            <param value = ""C4"" name=""circuit_number""/>
+            <param value = ""72"" name=""component_number_id""/>
+            <param value = ""1"" name=""component_number_revision""/>
+            <param value = ""NEWCOMPNO.80"" name=""component_number_name""/>
+            <param value = ""2"" name=""component_type_code""/>
+            <param value = ""Chip Capacitor"" name=""component_type_name""/>
+            <param value = ""54994.0"" name=""pos_x""/>
+            <param value = ""114769.0"" name=""pos_y""/>
+            <param value = ""440.0"" name=""size_x""/>
+            <param value = ""480.0"" name=""size_y""/>
+            <param value = ""0"" name=""component_angle""/>
+            <param value = ""0"" name=""individual_flag""/>
+            <param value = ""4"" name=""window_count""/>
+            <param value = ""0"" name=""inspection_result_code""/>
+            <param value = ""OK"" name=""inspection_result_name""/>
+            <param value = """" name=""confirm_result_code""/>
+            <param value = """" name=""confirm_result_name""/>
+            <param value = ""0"" name=""user_confirm_flag""/>
+            <param value = ""0"" name=""last_result""/>
+        </data>
+        <data>
+            <param value = ""20"" name=""component_id""/>
+            <param value = ""4"" name=""segment_id""/>
+            <param value = ""2"" name=""segment_no""/>
+            <param value = ""04123|6789"" name=""segment_code""/>
+            <param value = ""C5"" name=""circuit_number""/>
+            <param value = ""72"" name=""component_number_id""/>
+            <param value = ""1"" name=""component_number_revision""/>
+            <param value = ""NEWCOMPNO.80"" name=""component_number_name""/>
+            <param value = ""2"" name=""component_type_code""/>
+            <param value = ""Chip Capacitor"" name=""component_type_name""/>
+            <param value = ""106454.0"" name=""pos_x""/>
+            <param value = ""99902.0"" name=""pos_y""/>
+            <param value = ""440.0"" name=""size_x""/>
+            <param value = ""480.0"" name=""size_y""/>
+            <param value = ""0"" name=""component_angle""/>
+            <param value = ""0"" name=""individual_flag""/>
+            <param value = ""4"" name=""window_count""/>
+            <param value = ""0"" name=""inspection_result_code""/>
+            <param value = ""OK"" name=""inspection_result_name""/>
+            <param value = """" name=""confirm_result_code""/>
+            <param value = """" name=""confirm_result_name""/>
+            <param value = ""0"" name=""user_confirm_flag""/>
+            <param value = ""0"" name=""last_result""/>
+        </data>
+        <data>
+            <param value = ""900001"" name=""component_id""/>
+            <param value = ""0"" name=""segment_id""/>
+            <param value = ""0"" name=""segment_no""/>
+            <param value = """" name=""segment_code""/>
+            <param value = ""Visual Field"" name=""circuit_number""/>
+            <param value = ""-1"" name=""component_number_id""/>
+            <param value = ""-1"" name=""component_number_revision""/>
+            <param value = ""Foreign Material Detection (Entire PCB)"" name=""component_number_name""/>
+            <param value = ""-1"" name=""component_type_code""/>
+            <param value = ""Foreign Material Detection (Entire PCB)"" name=""component_type_name""/>
+            <param value = ""159040.0"" name=""pos_x""/>
+            <param value = ""119015.0"" name=""pos_y""/>
+            <param value = ""40960.0"" name=""size_x""/>
+            <param value = ""30720.0"" name=""size_y""/>
+            <param value = ""0"" name=""component_angle""/>
+            <param value = ""0"" name=""individual_flag""/>
+            <param value = ""1"" name=""window_count""/>
+            <param value = ""1"" name=""inspection_result_code""/>
+            <param value = ""Except Inspection"" name=""inspection_result_name""/>
+            <param value = """" name=""confirm_result_code""/>
+            <param value = """" name=""confirm_result_name""/>
+            <param value = ""0"" name=""user_confirm_flag""/>
+            <param value = ""3"" name=""last_result""/>
+        </data>
+        <data>
+            <param value = ""900002"" name=""component_id""/>
+            <param value = ""0"" name=""segment_id""/>
+            <param value = ""0"" name=""segment_no""/>
+            <param value = """" name=""segment_code""/>
+            <param value = ""Visual Field"" name=""circuit_number""/>
+            <param value = ""-1"" name=""component_number_id""/>
+            <param value = ""-1"" name=""component_number_revision""/>
+            <param value = ""Foreign Material Detection (Entire PCB)"" name=""component_number_name""/>
+            <param value = ""-1"" name=""component_type_code""/>
+            <param value = ""Foreign Material Detection (Entire PCB)"" name=""component_type_name""/>
+            <param value = ""-10000.0"" name=""pos_x""/>
+            <param value = ""34483.0"" name=""pos_y""/>
+            <param value = ""40960.0"" name=""size_x""/>
+            <param value = ""30720.0"" name=""size_y""/>
+            <param value = ""0"" name=""component_angle""/>
+            <param value = ""0"" name=""individual_flag""/>
+            <param value = ""1"" name=""window_count""/>
+            <param value = ""1"" name=""inspection_result_code""/>
+            <param value = ""Except Inspection"" name=""inspection_result_name""/>
+            <param value = """" name=""confirm_result_code""/>
+            <param value = """" name=""confirm_result_name""/>
+            <param value = ""0"" name=""user_confirm_flag""/>
+            <param value = ""3"" name=""last_result""/>
+        </data>
+        <data>
+            <param value = ""900003"" name=""component_id""/>
+            <param value = ""0"" name=""segment_id""/>
+            <param value = ""0"" name=""segment_no""/>
+            <param value = """" name=""segment_code""/>
+            <param value = ""Visual Field"" name=""circuit_number""/>
+            <param value = ""-1"" name=""component_number_id""/>
+            <param value = ""-1"" name=""component_number_revision""/>
+            <param value = ""Foreign Material Detection (Entire PCB)"" name=""component_number_name""/>
+            <param value = ""-1"" name=""component_type_code""/>
+            <param value = ""Foreign Material Detection (Entire PCB)"" name=""component_type_name""/>
+            <param value = ""12550.0"" name=""pos_x""/>
+            <param value = ""36772.0"" name=""pos_y""/>
+            <param value = ""40960.0"" name=""size_x""/>
+            <param value = ""30720.0"" name=""size_y""/>
+            <param value = ""0"" name=""component_angle""/>
+            <param value = ""0"" name=""individual_flag""/>
+            <param value = ""1"" name=""window_count""/>
+            <param value = ""1"" name=""inspection_result_code""/>
+            <param value = ""Except Inspection"" name=""inspection_result_name""/>
+            <param value = """" name=""confirm_result_code""/>
+            <param value = """" name=""confirm_result_name""/>
+            <param value = ""0"" name=""user_confirm_flag""/>
+            <param value = ""3"" name=""last_result""/>
+        </data>
+        <data>
+            <param value = ""900004"" name=""component_id""/>
+            <param value = ""0"" name=""segment_id""/>
+            <param value = ""0"" name=""segment_no""/>
+            <param value = """" name=""segment_code""/>
+            <param value = ""Visual Field"" name=""circuit_number""/>
+            <param value = ""-1"" name=""component_number_id""/>
+            <param value = ""-1"" name=""component_number_revision""/>
+            <param value = ""Foreign Material Detection (Entire PCB)"" name=""component_number_name""/>
+            <param value = ""-1"" name=""component_type_code""/>
+            <param value = ""Foreign Material Detection (Entire PCB)"" name=""component_type_name""/>
+            <param value = ""1958.0"" name=""pos_x""/>
+            <param value = ""57570.0"" name=""pos_y""/>
+            <param value = ""40960.0"" name=""size_x""/>
+            <param value = ""30720.0"" name=""size_y""/>
+            <param value = ""0"" name=""component_angle""/>
+            <param value = ""0"" name=""individual_flag""/>
+            <param value = ""1"" name=""window_count""/>
+            <param value = ""1"" name=""inspection_result_code""/>
+            <param value = ""Except Inspection"" name=""inspection_result_name""/>
+            <param value = """" name=""confirm_result_code""/>
+            <param value = """" name=""confirm_result_name""/>
+            <param value = ""0"" name=""user_confirm_flag""/>
+            <param value = ""3"" name=""last_result""/>
+        </data>
+        <data>
+            <param value = ""900005"" name=""component_id""/>
+            <param value = ""0"" name=""segment_id""/>
+            <param value = ""0"" name=""segment_no""/>
+            <param value = """" name=""segment_code""/>
+            <param value = ""Visual Field"" name=""circuit_number""/>
+            <param value = ""-1"" name=""component_number_id""/>
+            <param value = ""-1"" name=""component_number_revision""/>
+            <param value = ""Foreign Material Detection (Entire PCB)"" name=""component_number_name""/>
+            <param value = ""-1"" name=""component_type_code""/>
+            <param value = ""Foreign Material Detection (Entire PCB)"" name=""component_type_name""/>
+            <param value = ""23625.0"" name=""pos_x""/>
+            <param value = ""83263.0"" name=""pos_y""/>
+            <param value = ""40960.0"" name=""size_x""/>
+            <param value = ""30720.0"" name=""size_y""/>
+            <param value = ""0"" name=""component_angle""/>
+            <param value = ""0"" name=""individual_flag""/>
+            <param value = ""1"" name=""window_count""/>
+            <param value = ""1"" name=""inspection_result_code""/>
+            <param value = ""Except Inspection"" name=""inspection_result_name""/>
+            <param value = """" name=""confirm_result_code""/>
+            <param value = """" name=""confirm_result_name""/>
+            <param value = ""0"" name=""user_confirm_flag""/>
+            <param value = ""3"" name=""last_result""/>
+        </data>
+        <data>
+            <param value = ""900006"" name=""component_id""/>
+            <param value = ""0"" name=""segment_id""/>
+            <param value = ""0"" name=""segment_no""/>
+            <param value = """" name=""segment_code""/>
+            <param value = ""Visual Field"" name=""circuit_number""/>
+            <param value = ""-1"" name=""component_number_id""/>
+            <param value = ""-1"" name=""component_number_revision""/>
+            <param value = ""Foreign Material Detection (Entire PCB)"" name=""component_number_name""/>
+            <param value = ""-1"" name=""component_type_code""/>
+            <param value = ""Foreign Material Detection (Entire PCB)"" name=""component_type_name""/>
+            <param value = ""65263.0"" name=""pos_x""/>
+            <param value = ""40985.0"" name=""pos_y""/>
+            <param value = ""40960.0"" name=""size_x""/>
+            <param value = ""30720.0"" name=""size_y""/>
+            <param value = ""0"" name=""component_angle""/>
+            <param value = ""0"" name=""individual_flag""/>
+            <param value = ""1"" name=""window_count""/>
+            <param value = ""1"" name=""inspection_result_code""/>
+            <param value = ""Except Inspection"" name=""inspection_result_name""/>
+            <param value = """" name=""confirm_result_code""/>
+            <param value = """" name=""confirm_result_name""/>
+            <param value = ""0"" name=""user_confirm_flag""/>
+            <param value = ""3"" name=""last_result""/>
+        </data>
+        <data>
+            <param value = ""900007"" name=""component_id""/>
+            <param value = ""0"" name=""segment_id""/>
+            <param value = ""0"" name=""segment_no""/>
+            <param value = """" name=""segment_code""/>
+            <param value = ""Visual Field"" name=""circuit_number""/>
+            <param value = ""-1"" name=""component_number_id""/>
+            <param value = ""-1"" name=""component_number_revision""/>
+            <param value = ""Foreign Material Detection (Entire PCB)"" name=""component_number_name""/>
+            <param value = ""-1"" name=""component_type_code""/>
+            <param value = ""Foreign Material Detection (Entire PCB)"" name=""component_type_name""/>
+            <param value = ""116753.0"" name=""pos_x""/>
+            <param value = ""29720.0"" name=""pos_y""/>
+            <param value = ""40960.0"" name=""size_x""/>
+            <param value = ""30720.0"" name=""size_y""/>
+            <param value = ""0"" name=""component_angle""/>
+            <param value = ""0"" name=""individual_flag""/>
+            <param value = ""1"" name=""window_count""/>
+            <param value = ""1"" name=""inspection_result_code""/>
+            <param value = ""Except Inspection"" name=""inspection_result_name""/>
+            <param value = """" name=""confirm_result_code""/>
+            <param value = """" name=""confirm_result_name""/>
+            <param value = ""0"" name=""user_confirm_flag""/>
+            <param value = ""3"" name=""last_result""/>
+        </data>
+        <data>
+            <param value = ""900008"" name=""component_id""/>
+            <param value = ""0"" name=""segment_id""/>
+            <param value = ""0"" name=""segment_no""/>
+            <param value = """" name=""segment_code""/>
+            <param value = ""Visual Field"" name=""circuit_number""/>
+            <param value = ""-1"" name=""component_number_id""/>
+            <param value = ""-1"" name=""component_number_revision""/>
+            <param value = ""Foreign Material Detection (Entire PCB)"" name=""component_number_name""/>
+            <param value = ""-1"" name=""component_type_code""/>
+            <param value = ""Foreign Material Detection (Entire PCB)"" name=""component_type_name""/>
+            <param value = ""143663.0"" name=""pos_x""/>
+            <param value = ""42064.0"" name=""pos_y""/>
+            <param value = ""40960.0"" name=""size_x""/>
+            <param value = ""30720.0"" name=""size_y""/>
+            <param value = ""0"" name=""component_angle""/>
+            <param value = ""0"" name=""individual_flag""/>
+            <param value = ""1"" name=""window_count""/>
+            <param value = ""1"" name=""inspection_result_code""/>
+            <param value = ""Except Inspection"" name=""inspection_result_name""/>
+            <param value = """" name=""confirm_result_code""/>
+            <param value = """" name=""confirm_result_name""/>
+            <param value = ""0"" name=""user_confirm_flag""/>
+            <param value = ""3"" name=""last_result""/>
+        </data>
+        <data>
+            <param value = ""900009"" name=""component_id""/>
+            <param value = ""0"" name=""segment_id""/>
+            <param value = ""0"" name=""segment_no""/>
+            <param value = """" name=""segment_code""/>
+            <param value = ""Visual Field"" name=""circuit_number""/>
+            <param value = ""-1"" name=""component_number_id""/>
+            <param value = ""-1"" name=""component_number_revision""/>
+            <param value = ""Foreign Material Detection (Entire PCB)"" name=""component_number_name""/>
+            <param value = ""-1"" name=""component_type_code""/>
+            <param value = ""Foreign Material Detection (Entire PCB)"" name=""component_type_name""/>
+            <param value = ""147793.0"" name=""pos_x""/>
+            <param value = ""73859.0"" name=""pos_y""/>
+            <param value = ""40960.0"" name=""size_x""/>
+            <param value = ""30720.0"" name=""size_y""/>
+            <param value = ""0"" name=""component_angle""/>
+            <param value = ""0"" name=""individual_flag""/>
+            <param value = ""1"" name=""window_count""/>
+            <param value = ""1"" name=""inspection_result_code""/>
+            <param value = ""Except Inspection"" name=""inspection_result_name""/>
+            <param value = """" name=""confirm_result_code""/>
+            <param value = """" name=""confirm_result_name""/>
+            <param value = ""0"" name=""user_confirm_flag""/>
+            <param value = ""3"" name=""last_result""/>
+        </data>
+        <data>
+            <param value = ""900010"" name=""component_id""/>
+            <param value = ""0"" name=""segment_id""/>
+            <param value = ""0"" name=""segment_no""/>
+            <param value = """" name=""segment_code""/>
+            <param value = ""Visual Field"" name=""circuit_number""/>
+            <param value = ""-1"" name=""component_number_id""/>
+            <param value = ""-1"" name=""component_number_revision""/>
+            <param value = ""Foreign Material Detection (Entire PCB)"" name=""component_number_name""/>
+            <param value = ""-1"" name=""component_type_code""/>
+            <param value = ""Foreign Material Detection (Entire PCB)"" name=""component_type_name""/>
+            <param value = ""134773.0"" name=""pos_x""/>
+            <param value = ""115580.0"" name=""pos_y""/>
+            <param value = ""40960.0"" name=""size_x""/>
+            <param value = ""30720.0"" name=""size_y""/>
+            <param value = ""0"" name=""component_angle""/>
+            <param value = ""0"" name=""individual_flag""/>
+            <param value = ""1"" name=""window_count""/>
+            <param value = ""1"" name=""inspection_result_code""/>
+            <param value = ""Except Inspection"" name=""inspection_result_name""/>
+            <param value = """" name=""confirm_result_code""/>
+            <param value = """" name=""confirm_result_name""/>
+            <param value = ""0"" name=""user_confirm_flag""/>
+            <param value = ""3"" name=""last_result""/>
+        </data>
+        <data>
+            <param value = ""900011"" name=""component_id""/>
+            <param value = ""0"" name=""segment_id""/>
+            <param value = ""0"" name=""segment_no""/>
+            <param value = """" name=""segment_code""/>
+            <param value = ""Visual Field"" name=""circuit_number""/>
+            <param value = ""-1"" name=""component_number_id""/>
+            <param value = ""-1"" name=""component_number_revision""/>
+            <param value = ""Foreign Material Detection (Entire PCB)"" name=""component_number_name""/>
+            <param value = ""-1"" name=""component_type_code""/>
+            <param value = ""Foreign Material Detection (Entire PCB)"" name=""component_type_name""/>
+            <param value = ""101471.0"" name=""pos_x""/>
+            <param value = ""70589.0"" name=""pos_y""/>
+            <param value = ""40960.0"" name=""size_x""/>
+            <param value = ""30720.0"" name=""size_y""/>
+            <param value = ""0"" name=""component_angle""/>
+            <param value = ""0"" name=""individual_flag""/>
+            <param value = ""1"" name=""window_count""/>
+            <param value = ""1"" name=""inspection_result_code""/>
+            <param value = ""Except Inspection"" name=""inspection_result_name""/>
+            <param value = """" name=""confirm_result_code""/>
+            <param value = """" name=""confirm_result_name""/>
+            <param value = ""0"" name=""user_confirm_flag""/>
+            <param value = ""3"" name=""last_result""/>
+        </data>
+        <data>
+            <param value = ""900012"" name=""component_id""/>
+            <param value = ""0"" name=""segment_id""/>
+            <param value = ""0"" name=""segment_no""/>
+            <param value = """" name=""segment_code""/>
+            <param value = ""Visual Field"" name=""circuit_number""/>
+            <param value = ""-1"" name=""component_number_id""/>
+            <param value = ""-1"" name=""component_number_revision""/>
+            <param value = ""Foreign Material Detection (Entire PCB)"" name=""component_number_name""/>
+            <param value = ""-1"" name=""component_type_code""/>
+            <param value = ""Foreign Material Detection (Entire PCB)"" name=""component_type_name""/>
+            <param value = ""75726.0"" name=""pos_x""/>
+            <param value = ""106139.0"" name=""pos_y""/>
+            <param value = ""40960.0"" name=""size_x""/>
+            <param value = ""30720.0"" name=""size_y""/>
+            <param value = ""0"" name=""component_angle""/>
+            <param value = ""0"" name=""individual_flag""/>
+            <param value = ""1"" name=""window_count""/>
+            <param value = ""1"" name=""inspection_result_code""/>
+            <param value = ""Except Inspection"" name=""inspection_result_name""/>
+            <param value = """" name=""confirm_result_code""/>
+            <param value = """" name=""confirm_result_name""/>
+            <param value = ""0"" name=""user_confirm_flag""/>
+            <param value = ""3"" name=""last_result""/>
+        </data>
+        <data>
+            <param value = ""900013"" name=""component_id""/>
+            <param value = ""0"" name=""segment_id""/>
+            <param value = ""0"" name=""segment_no""/>
+            <param value = """" name=""segment_code""/>
+            <param value = ""Visual Field"" name=""circuit_number""/>
+            <param value = ""-1"" name=""component_number_id""/>
+            <param value = ""-1"" name=""component_number_revision""/>
+            <param value = ""Foreign Material Detection (Entire PCB)"" name=""component_number_name""/>
+            <param value = ""-1"" name=""component_type_code""/>
+            <param value = ""Foreign Material Detection (Entire PCB)"" name=""component_type_name""/>
+            <param value = ""52787.0"" name=""pos_x""/>
+            <param value = ""126000.0"" name=""pos_y""/>
+            <param value = ""40960.0"" name=""size_x""/>
+            <param value = ""30720.0"" name=""size_y""/>
+            <param value = ""0"" name=""component_angle""/>
+            <param value = ""0"" name=""individual_flag""/>
+            <param value = ""1"" name=""window_count""/>
+            <param value = ""1"" name=""inspection_result_code""/>
+            <param value = ""Except Inspection"" name=""inspection_result_name""/>
+            <param value = """" name=""confirm_result_code""/>
+            <param value = """" name=""confirm_result_name""/>
+            <param value = ""0"" name=""user_confirm_flag""/>
+            <param value = ""3"" name=""last_result""/>
+        </data>
+        <data>
+            <param value = ""900014"" name=""component_id""/>
+            <param value = ""0"" name=""segment_id""/>
+            <param value = ""0"" name=""segment_no""/>
+            <param value = """" name=""segment_code""/>
+            <param value = ""Visual Field"" name=""circuit_number""/>
+            <param value = ""-1"" name=""component_number_id""/>
+            <param value = ""-1"" name=""component_number_revision""/>
+            <param value = ""Foreign Material Detection (Entire PCB)"" name=""component_number_name""/>
+            <param value = ""-1"" name=""component_type_code""/>
+            <param value = ""Foreign Material Detection (Entire PCB)"" name=""component_type_name""/>
+            <param value = ""7790.0"" name=""pos_x""/>
+            <param value = ""113872.0"" name=""pos_y""/>
+            <param value = ""40960.0"" name=""size_x""/>
+            <param value = ""30720.0"" name=""size_y""/>
+            <param value = ""0"" name=""component_angle""/>
+            <param value = ""0"" name=""individual_flag""/>
+            <param value = ""1"" name=""window_count""/>
+            <param value = ""1"" name=""inspection_result_code""/>
+            <param value = ""Except Inspection"" name=""inspection_result_name""/>
+            <param value = """" name=""confirm_result_code""/>
+            <param value = """" name=""confirm_result_name""/>
+            <param value = ""0"" name=""user_confirm_flag""/>
+            <param value = ""3"" name=""last_result""/>
+        </data>
+    </output>
+    <recordCount>34</recordCount>
+    <returnCode>0</returnCode>
+</resultDataM>";
         public string testXML_0count = @"<?xml version=""1.0"" encoding=""UTF-8"" standalone=""yes""?>
                             <resultDataM>
                                 <recordCount>0</recordCount>
@@ -742,13 +1270,14 @@ class Inspection
 {
     public string MachineName { get; set; }//from CSV file name
     public string InspectionID { get; set; }//get from API 4-1
-    public string inspection_end_time { get; set; }//get from API 4-1
-    public string confrim_date { get; set; }//get from API 4-1
-    public string SegmentNo { get; set; }//get from API 4-3(ComponentBlockNo)
+    public string confirm_date { get; set; }
+    public string inspection_end_time { get; set; }
+    public string SegmentNo { get; set; }//get from API 4-3(ComponentBlockName)
     public string SegmentCode { get; set; }//get from API 4-3(block_barcode) 
     public string CircuitNumber { get; set; }//get from API 4-3(PartsName)
     public string ComponentID { get; set; }//get from API 4-3
     public string LastResult { get; set; }//get from API 4-3
+    public string ComponentNo { get; set; }//get from CSV Table
     public string InspectionImagePath { get; set; }//get from API 4-12
 }
 

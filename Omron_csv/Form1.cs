@@ -56,7 +56,7 @@ namespace Omron_csv
                         txbMsg.Text += "新增output資料夾" + Environment.NewLine;
                         dir.Parent.CreateSubdirectory("output");
                     }
-                    pc.Datatable2Csv(dt, outputPath.FullName + "\\" + f.Name );
+                    pc.Datatable2Csv(dt, outputPath.FullName + "\\" + f.Name);
                     filescount++;
                     //Delete Original Files
                     File.Delete(f.FullName);
@@ -114,6 +114,30 @@ namespace Omron_csv
             txbMsg.SelectionStart = txbMsg.Text.Length;
             txbMsg.ScrollToCaret();
 
+        }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            PublicClass pub = new PublicClass();
+            List<Inspection> ins = new List<Inspection>();
+            ins = pub.getComponentID(pub.testXML);
+            List<Inspection> goodComponentList = new List<Inspection>();
+            //先取得Segment Code名稱
+            List<string> segmentCode = new List<string>();
+            segmentCode = ins.Where(p => p.SegmentNo != "0").GroupBy(p => p.SegmentCode).Select(grp => grp.First()).Select(x => x.SegmentCode).ToList();
+            foreach (string codename in segmentCode)
+            {
+                List<Inspection> _list = new List<Inspection>();
+                _list = ins.Where(p => p.SegmentCode == codename).GroupBy(x => x.SegmentNo).Select(grp => grp.First()).ToList();
+                goodComponentList =goodComponentList.Concat(_list).ToList();
+            }
+            Console.WriteLine(goodComponentList);
+        }
+
+        private void button4_Click(object sender, EventArgs e)
+        {
+            Form3 f3 = new Form3();
+            f3.Show();
         }
     }
 }
