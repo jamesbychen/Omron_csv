@@ -14,3 +14,4 @@ C:\Users\U35J\documents\visual studio 2017\Projects\Omron_csv\Omron_csv\obj\Debu
 C:\Users\U35J\documents\visual studio 2017\Projects\Omron_csv\Omron_csv\obj\Debug\Omron_csv.application
 C:\Users\U35J\documents\visual studio 2017\Projects\Omron_csv\Omron_csv\obj\Debug\Omron_csv.exe
 C:\Users\U35J\documents\visual studio 2017\Projects\Omron_csv\Omron_csv\obj\Debug\Omron_csv.pdb
+C:\Users\U35J\documents\visual studio 2017\Projects\Omron_csv\Omron_csv\obj\Debug\Omron_csv.csprojAssemblyReference.cache

@@ -156,11 +156,6 @@ namespace Omron_csv
             wr.Dispose();
             wr.Close();
         }
-        //讀取原有CSV檔案，輸出新的CSV，刪除舊檔案
-        public void writeCSV()
-        {
-
-        }
 
         //
         public XmlNodeList getOutputXMLNodeList(string XML)

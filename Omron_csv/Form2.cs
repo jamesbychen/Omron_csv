@@ -35,6 +35,7 @@ namespace Omron_csv
             cbBoardID.Visible = false;
         }
 
+        //test API
         private void button1_Click(object sender, EventArgs e)
         {
             btnAPI.Enabled = false;
